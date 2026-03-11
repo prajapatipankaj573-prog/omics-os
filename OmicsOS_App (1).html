@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OmicsOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;1,500&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --w: #ffffff;
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --blue: #1a6cff;
+  --blue-d: #1252cc;
+  --blue-s: #e8f0ff;
+  --blue-m: #c4d6ff;
+  --teal: #00b8a9;
+  --teal-s: #e0f7f5;
+  --green: #12b76a;
+  --green-s: #d1fadf;
+  --amber: #f79009;
+  --amber-s: #fef0c7;
+  --red: #f04438;
+  --red-s: #fee4e2;
+  --purple: #6941c6;
+  --purple-s: #f4f0fd;
+  --text: #101828;
+  --t2: #344054;
+  --t3: #667085;
+  --t4: #98a2b3;
+  --border: #eaecf0;
+  --border2: #d0d5dd;
+  --sh: 0 1px 3px rgba(16,24,40,0.1), 0 1px 2px rgba(16,24,40,0.06);
+  --sh2: 0 4px 16px rgba(16,24,40,0.1);
+  --sh3: 0 12px 40px rgba(16,24,40,0.14);
+  --r: 16px;
+  --r2: 12px;
+  --r3: 8px;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ===== STATUS BAR ===== */
+.status-bar {
+  height: 44px;
+  background: var(--w);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  font-size: 13px; font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  flex-shrink: 0;
+}
+.sb-time { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+.sb-icons { display: flex; gap: 6px; align-items: center; font-size: 14px; }
+
+/* ===== APP SHELL ===== */
+.app-shell {
+  display: flex; flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ===== SLIDE VIEWPORT ===== */
+.slides-viewport {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.slides-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+.slide {
+  min-width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 20px;
+}
+.slide::-webkit-scrollbar { display: none; }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  height: 72px;
+  background: var(--w);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: stretch;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  flex-shrink: 0;
+  position: relative; z-index: 100;
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px; cursor: pointer;
+  background: none; border: none;
+  padding: 8px 4px;
+  transition: all 0.2s;
+  position: relative;
+}
+.nav-item.active .nav-icon { color: var(--blue); }
+.nav-item.active .nav-label { color: var(--blue); font-weight: 600; }
+.nav-item.active::after {
+  content: '';
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 32px; height: 3px;
+  background: var(--blue); border-radius: 0 0 3px 3px;
+}
+.nav-icon { font-size: 22px; color: var(--t4); transition: all 0.2s; }
+.nav-label { font-size: 10px; font-weight: 500; color: var(--t4); letter-spacing: 0.01em; }
+.nav-item:active { transform: scale(0.92); }
+
+/* ===== SLIDE HEADER ===== */
+.slide-header {
+  background: var(--w);
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+}
+.slide-header-row { display: flex; align-items: center; justify-content: space-between; }
+.sh-left { }
+.sh-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--blue);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 4px;
+}
+.sh-title {
+  font-family: 'Lora', serif;
+  font-size: 22px; font-weight: 600;
+  color: var(--text); line-height: 1.2;
+}
+.sh-btn {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--bg); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: all 0.2s;
+}
+.sh-btn:active { background: var(--blue-s); transform: scale(0.92); }
+
+/* ===== SLIDE CONTENT ===== */
+.slide-content { padding: 16px 16px 0; }
+
+/* ===== HOME SLIDE ===== */
+.home-hero {
+  background: linear-gradient(135deg, var(--blue) 0%, #0044d4 100%);
+  border-radius: var(--r); margin: 16px; padding: 24px 20px;
+  color: white; position: relative; overflow: hidden;
+}
+.home-hero::before {
+  content: '';
+  position: absolute; top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 50%;
+}
+.home-hero::after {
+  content: '';
+  position: absolute; bottom: -60px; left: -20px;
+  width: 200px; height: 200px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+}
+.hh-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 100px; padding: 3px 10px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+  margin-bottom: 12px; font-family: 'JetBrains Mono', monospace;
+}
+.hh-dot { width: 6px; height: 6px; background: #7dffaa; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+.hh-title { font-family: 'Lora', serif; font-size: 26px; line-height: 1.2; margin-bottom: 8px; }
+.hh-sub { font-size: 13px; opacity: 0.8; line-height: 1.6; margin-bottom: 20px; }
+.hh-btn {
+  background: white; color: var(--blue);
+  font-weight: 700; font-size: 13px;
+  padding: 10px 18px; border-radius: 10px; border: none;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  transition: all 0.2s;
+}
+.hh-btn:active { transform: scale(0.95); }
+
+.quick-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 16px; }
+.qs-card {
+  background: var(--w); border-radius: var(--r2);
+  padding: 14px; border: 1px solid var(--border);
+  box-shadow: var(--sh);
+}
+.qs-icon { font-size: 22px; margin-bottom: 6px; }
+.qs-num { font-size: 22px; font-weight: 800; color: var(--blue); font-family: 'JetBrains Mono', monospace; line-height: 1; }
+.qs-label { font-size: 11px; color: var(--t3); margin-top: 3px; font-weight: 500; }
+
+.section-title-sm {
+  font-size: 13px; font-weight: 700; color: var(--t2);
+  padding: 0 16px 10px; letter-spacing: 0.02em;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.see-all { font-size: 12px; color: var(--blue); font-weight: 600; background: none; border: none; cursor: pointer; }
+
+.portal-scroll { display: flex; gap: 10px; padding: 0 16px 16px; overflow-x: auto; scrollbar-width: none; }
+.portal-scroll::-webkit-scrollbar { display: none; }
+.portal-chip {
+  flex-shrink: 0; background: var(--w);
+  border: 1px solid var(--border); border-radius: var(--r2);
+  padding: 12px 14px; min-width: 130px;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: var(--sh);
+}
+.portal-chip:active { transform: scale(0.96); }
+.pc-icon { font-size: 24px; margin-bottom: 6px; }
+.pc-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.pc-desc { font-size: 10px; color: var(--t3); line-height: 1.4; }
+
+/* ===== ANALYSIS SLIDE ===== */
+.analysis-sections { padding: 0 16px; }
+.a-section {
+  background: var(--w); border-radius: var(--r);
+  border: 1px solid var(--border); margin-bottom: 12px;
+  overflow: hidden; box-shadow: var(--sh);
+}
+.a-section-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; cursor: pointer;
+  user-select: none;
+}
+.a-section-header:active { background: var(--bg); }
+.a-section-icon { font-size: 20px; }
+.a-section-info { flex: 1; }
+.a-section-name { font-size: 14px; font-weight: 700; }
+.a-section-sub { font-size: 11px; color: var(--t3); }
+.a-section-arrow { font-size: 12px; color: var(--t4); transition: transform 0.3s; }
+.a-section.open .a-section-arrow { transform: rotate(90deg); }
+.a-section-body { display: none; padding: 0 16px 16px; border-top: 1px solid var(--border); }
+.a-section.open .a-section-body { display: block; }
+
+/* Form elements */
+.form-group { margin-top: 12px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--t2); margin-bottom: 5px; display: block; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--bg);
+  border: 1.5px solid var(--border2); color: var(--text);
+  border-radius: var(--r3); padding: 11px 14px;
+  font-family: 'Outfit', sans-serif; font-size: 14px;
+  outline: none; transition: border-color 0.2s, background 0.2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--blue); background: white;
+  box-shadow: 0 0 0 3px rgba(26,108,255,0.1);
+}
+.form-input::placeholder { color: var(--t4); }
+.form-textarea { resize: none; min-height: 72px; line-height: 1.5; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Chips */
+.chips-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.chip {
+  background: var(--bg); border: 1.5px solid var(--border2);
+  color: var(--t2); border-radius: 100px;
+  padding: 5px 12px; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.18s; user-select: none;
+}
+.chip.on { background: var(--blue-s); border-color: var(--blue); color: var(--blue); font-weight: 600; }
+.chip:active { transform: scale(0.94); }
+
+/* Upload zone */
+.upload-zone {
+  border: 2px dashed var(--border2); border-radius: var(--r2);
+  padding: 24px; text-align: center;
+  background: var(--bg); margin-top: 12px;
+  cursor: pointer; transition: all 0.2s; position: relative;
+}
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-zone:active { border-color: var(--blue); background: var(--blue-s); }
+.uz-icon { font-size: 28px; margin-bottom: 6px; }
+.uz-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.uz-sub { font-size: 11px; color: var(--t3); line-height: 1.5; }
+.uz-formats { display: flex; gap: 4px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+.fmt { font-family: 'JetBrains Mono', monospace; font-size: 9px; background: white; border: 1px solid var(--border2); color: var(--t3); padding: 2px 5px; border-radius: 4px; }
+
+.file-attached {
+  display: none; align-items: center; gap: 10px;
+  background: var(--green-s); border: 1px solid var(--green);
+  border-radius: var(--r3); padding: 10px 12px; margin-top: 10px;
+}
+.file-attached.show { display: flex; }
+.fa-icon { font-size: 18px; }
+.fa-info { flex: 1; }
+.fa-name { font-size: 12px; font-weight: 700; }
+.fa-size { font-size: 10px; color: var(--t3); }
+.fa-rm { background: none; border: none; font-size: 14px; color: var(--t3); cursor: pointer; padding: 4px; }
+
+/* Medication section */
+.med-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.med-item {
+  background: white; border: 1.5px solid var(--border);
+  border-radius: var(--r3); padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.med-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.med-info { flex: 1; }
+.med-name { font-size: 13px; font-weight: 700; }
+.med-dose { font-size: 11px; color: var(--t3); }
+.med-rm { background: none; border: none; color: var(--t4); cursor: pointer; font-size: 14px; padding: 2px 4px; }
+.med-rm:active { color: var(--red); }
+.add-med-row { display: flex; gap: 8px; margin-top: 10px; }
+.add-med-input { flex: 1; }
+.add-med-btn {
+  background: var(--blue); color: white; border: none;
+  border-radius: var(--r3); padding: 0 16px;
+  font-weight: 700; font-size: 13px; cursor: pointer;
+  white-space: nowrap; display: flex; align-items: center; gap: 4px;
+}
+.add-med-btn:active { background: var(--blue-d); transform: scale(0.96); }
+
+/* Med quick picks */
+.med-quick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.med-pick {
+  font-size: 11px; font-weight: 500;
+  background: var(--purple-s); border: 1px solid #d6bbfb;
+  color: var(--purple); border-radius: 100px;
+  padding: 4px 10px; cursor: pointer; transition: all 0.18s;
+}
+.med-pick:active { background: var(--purple); color: white; transform: scale(0.94); }
+
+/* Run button */
+.run-btn {
+  width: 100%; background: linear-gradient(135deg, var(--blue) 0%, #0052e0 100%);
+  color: white; border: none; border-radius: var(--r2);
+  padding: 15px; font-family: 'Outfit', sans-serif; font-weight: 700;
+  font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 16px 0; transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(26,108,255,0.4);
+}
+.run-btn:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(26,108,255,0.3); }
+.run-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* ===== RESULTS SLIDE ===== */
+.results-wrap { padding: 0 16px; }
+
+.result-score-card {
+  background: linear-gradient(135deg, #0d1b2a 0%, #1a3455 100%);
+  border-radius: var(--r); padding: 20px;
+  color: white; margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.rsc-bg {
+  position: absolute; top: -30px; right: -30px;
+  width: 140px; height: 140px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 50%;
+}
+.rsc-title { font-size: 11px; font-weight: 600; opacity: 0.6; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
+.rsc-patient { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; margin-bottom: 2px; }
+.rsc-disease { font-size: 12px; opacity: 0.7; margin-bottom: 16px; }
+.rsc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.rsc-metric { text-align: center; }
+.rsc-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: #7dffaa; }
+.rsc-lbl { font-size: 9px; opacity: 0.6; margin-top: 2px; line-height: 1.3; }
+.rsc-badge {
+  position: absolute; top: 16px; right: 16px;
+  background: rgba(125,255,170,0.15); border: 1px solid rgba(125,255,170,0.3);
+  color: #7dffaa; font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace;
+}
+
+.result-card {
+  background: var(--w); border-radius: var(--r);
+  border: 1px solid var(--border); margin-bottom: 12px;
+  overflow: hidden; box-shadow: var(--sh);
+}
+.rc-header {
+  padding: 14px 16px 0;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.rc-title { font-size: 13px; font-weight: 700; color: var(--t2); }
+.rc-sub { font-size: 11px; color: var(--t3); margin-top: 1px; }
+.rc-body { padding: 12px 16px 16px; }
+
+/* Drug bars */
+.drug-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+}
+.drug-row:last-child { border-bottom: none; }
+.dr-name { font-size: 12px; font-weight: 700; min-width: 110px; }
+.dr-bar-bg { flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.dr-bar { height: 100%; border-radius: 4px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+.dr-pct { font-family: 'JetBrains Mono', monospace; font-size: 11px; min-width: 35px; text-align: right; font-weight: 600; }
+.conf-pip {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+/* Med interaction */
+.med-interaction-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.med-interaction-row:last-child { border-bottom: none; }
+.mir-icon { font-size: 16px; flex-shrink: 0; }
+.mir-info { flex: 1; }
+.mir-name { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+.mir-desc { font-size: 11px; color: var(--t3); line-height: 1.5; }
+.mir-badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+.mir-ok { background: var(--green-s); color: var(--green); }
+.mir-warn { background: var(--amber-s); color: var(--amber); }
+.mir-danger { background: var(--red-s); color: var(--red); }
+
+/* Progress rings / bars */
+.progress-bar { margin-bottom: 10px; }
+.pb-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.pb-label { font-size: 12px; font-weight: 600; color: var(--t2); }
+.pb-val { font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.pb-track { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.pb-fill { height: 100%; border-radius: 4px; transition: width 1.2s ease; }
+
+/* Variant list */
+.variant-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.variant-item:last-child { border-bottom: none; }
+.var-gene { font-weight: 700; min-width: 55px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue); }
+.var-mut { color: var(--t2); flex: 1; line-height: 1.4; }
+.var-impact { font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+.vi-high { background: var(--red-s); color: var(--red); }
+.vi-med { background: var(--amber-s); color: var(--amber); }
+.vi-low { background: var(--green-s); color: var(--green); }
+
+/* Download buttons */
+.action-row { display: flex; gap: 8px; padding: 0 16px 16px; flex-wrap: wrap; }
+.action-btn {
+  flex: 1; min-width: 110px;
+  background: var(--w); border: 1.5px solid var(--border2);
+  color: var(--t2); border-radius: var(--r3); padding: 10px 12px;
+  font-weight: 600; font-size: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: all 0.2s; font-family: 'Outfit', sans-serif;
+}
+.action-btn:active { transform: scale(0.95); }
+.action-btn.primary { background: var(--blue); color: white; border-color: var(--blue); box-shadow: 0 2px 8px rgba(26,108,255,0.3); }
+.action-btn.teal { background: var(--teal); color: white; border-color: var(--teal); }
+
+/* ===== DATA SOURCES SLIDE ===== */
+.ds-search-wrap { padding: 12px 16px; background: var(--w); border-bottom: 1px solid var(--border); }
+.ds-search-bar {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--bg); border: 1.5px solid var(--border2);
+  border-radius: var(--r2); padding: 8px 14px;
+  transition: border-color 0.2s;
+}
+.ds-search-bar:focus-within { border-color: var(--blue); background: white; box-shadow: 0 0 0 3px rgba(26,108,255,0.1); }
+.ds-search-bar span { color: var(--t4); font-size: 16px; }
+.ds-input {
+  flex: 1; background: none; border: none; outline: none;
+  font-family: 'Outfit', sans-serif; font-size: 14px; color: var(--text);
+}
+.ds-input::placeholder { color: var(--t4); }
+.ds-go { background: var(--blue); color: white; border: none; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: 'Outfit', sans-serif; }
+.ds-go:active { background: var(--blue-d); }
+
+.quick-pills { display: flex; gap: 6px; overflow-x: auto; padding: 10px 16px 0; scrollbar-width: none; }
+.quick-pills::-webkit-scrollbar { display: none; }
+.qpill {
+  flex-shrink: 0; background: var(--bg); border: 1px solid var(--border2);
+  color: var(--t2); border-radius: 100px; padding: 4px 10px;
+  font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.18s;
+}
+.qpill:active { background: var(--blue-s); color: var(--blue); border-color: var(--blue); }
+
+.db-category-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px; scrollbar-width: none; }
+.db-category-scroll::-webkit-scrollbar { display: none; }
+.db-cat-btn {
+  flex-shrink: 0; background: var(--w); border: 1.5px solid var(--border2);
+  color: var(--t2); border-radius: 100px; padding: 7px 14px;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.18s;
+  white-space: nowrap;
+}
+.db-cat-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+.db-cat-btn:active { transform: scale(0.94); }
+
+.db-cards { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.db-card {
+  background: var(--w); border-radius: var(--r);
+  border: 1.5px solid var(--border);
+  overflow: hidden; box-shadow: var(--sh);
+  transition: all 0.2s;
+}
+.db-card:active { transform: scale(0.98); }
+.dc-top { display: flex; align-items: center; gap: 10px; padding: 14px 14px 10px; }
+.dc-color-bar { width: 4px; align-self: stretch; border-radius: 2px; flex-shrink: 0; }
+.dc-info { flex: 1; }
+.dc-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; line-height: 1.3; }
+.dc-short { font-size: 10px; font-weight: 700; color: var(--t3); font-family: 'JetBrains Mono', monospace; }
+.dc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.dc-access { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+.dc-free { background: var(--green-s); color: var(--green); }
+.dc-req { background: var(--amber-s); color: var(--amber); }
+.dc-body { padding: 0 14px 12px 14px; }
+.dc-desc { font-size: 12px; color: var(--t3); line-height: 1.6; margin-bottom: 8px; }
+.dc-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+.dc-tag { font-size: 9px; background: var(--bg); border: 1px solid var(--border2); color: var(--t2); padding: 2px 7px; border-radius: 4px; font-weight: 600; }
+.dc-btn {
+  width: 100%; background: var(--bg); border: 1.5px solid var(--border2);
+  color: var(--t2); border-radius: var(--r3); padding: 9px;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  font-family: 'Outfit', sans-serif;
+}
+.dc-btn:active { background: var(--blue-s); border-color: var(--blue); color: var(--blue); transform: scale(0.97); }
+
+/* Disease results table */
+.dis-results {
+  display: none; margin: 0 16px 12px;
+  background: var(--w); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden; box-shadow: var(--sh);
+}
+.dis-results.show { display: block; animation: slideUp 0.3s ease; }
+@keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.dis-header { background: var(--bg); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+.dis-header-title { font-size: 12px; font-weight: 700; }
+.dis-count { font-size: 10px; color: var(--t3); background: var(--blue-s); color: var(--blue); padding: 2px 6px; border-radius: 5px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.dis-row { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid var(--border); }
+.dis-row:last-child { border-bottom: none; }
+.dis-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dis-db { font-size: 11px; font-weight: 700; min-width: 70px; font-family: 'JetBrains Mono', monospace; }
+.dis-cat { font-size: 10px; color: var(--t3); flex: 1; }
+.dis-link { color: var(--blue); font-size: 11px; font-weight: 700; text-decoration: none; }
+
+/* ===== HOW-TO / SOURCES SLIDE ===== */
+.howto-cards { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.howto-card {
+  background: var(--w); border-radius: var(--r);
+  border: 1px solid var(--border); padding: 14px;
+  display: flex; gap: 12px; align-items: flex-start;
+  box-shadow: var(--sh); transition: all 0.2s;
+}
+.howto-card:active { transform: scale(0.98); }
+.hc-icon { font-size: 28px; flex-shrink: 0; }
+.hc-info { flex: 1; }
+.hc-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.hc-desc { font-size: 11px; color: var(--t3); line-height: 1.6; margin-bottom: 6px; }
+.hc-link { color: var(--blue); font-size: 11px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; }
+.hc-country { font-size: 9px; background: var(--blue-s); color: var(--blue); padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-top: 4px; display: inline-block; }
+
+/* ===== PROFILE SLIDE ===== */
+.profile-header { padding: 20px 16px; background: var(--w); border-bottom: 1px solid var(--border); display: flex; gap: 14px; align-items: center; }
+.profile-avatar { width: 56px; height: 56px; border-radius: 18px; background: linear-gradient(135deg, var(--blue), #6941c6); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+.profile-name { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; }
+.profile-email { font-size: 12px; color: var(--t3); margin-top: 2px; }
+.profile-plan { font-size: 10px; background: var(--blue-s); color: var(--blue); padding: 2px 8px; border-radius: 5px; font-weight: 700; margin-top: 4px; display: inline-block; }
+.profile-menu { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.pm-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--w); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 14px;
+  cursor: pointer; transition: all 0.2s; box-shadow: var(--sh);
+}
+.pm-item:active { transform: scale(0.97); background: var(--bg); }
+.pm-icon { font-size: 20px; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pm-text { flex: 1; }
+.pm-title { font-size: 13px; font-weight: 700; }
+.pm-sub { font-size: 11px; color: var(--t3); }
+.pm-arrow { color: var(--t4); font-size: 14px; }
+
+/* ===== LOADER ===== */
+.full-loader {
+  display: none; position: fixed; inset: 0; z-index: 999;
+  background: rgba(255,255,255,0.95);
+  flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+}
+.full-loader.show { display: flex; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.fl-ring { width: 48px; height: 48px; border: 3px solid var(--border2); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.fl-text { font-size: 14px; font-weight: 600; color: var(--t2); }
+.fl-sub { font-size: 12px; color: var(--t3); text-align: center; max-width: 220px; line-height: 1.6; }
+.fl-progress { width: 200px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.fl-bar { height: 100%; background: var(--blue); border-radius: 2px; animation: loading 2.8s ease forwards; }
+@keyframes loading { from{width:0} to{width:100%} }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed; bottom: 88px; left: 16px; right: 16px; z-index: 500;
+  background: var(--text); color: white;
+  border-radius: var(--r2); padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--sh3); font-size: 13px; font-weight: 500;
+  transform: translateY(120%); opacity: 0; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ===== DISCLAIMER CARD ===== */
+.disclaimer-card {
+  margin: 12px 16px; background: var(--amber-s);
+  border: 1px solid #fdd49a; border-radius: var(--r2); padding: 12px 14px;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.dc-icon2 { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.dc-text { font-size: 11px; color: #92400e; line-height: 1.6; }
+
+/* ===== SPLASH SCREEN ===== */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(145deg, #0a0f2e 0%, #0d1b4b 40%, #0a2a5e 70%, #0d3b6e 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+}
+#splash .sp-particles {
+  position: absolute; inset: 0; pointer-events: none;
+}
+#splash .sp-particle {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  animation: floatParticle linear infinite;
+}
+@keyframes floatParticle {
+  0% { transform: translateY(110vh) scale(0); opacity: 0; }
+  10% { opacity: 1; transform: translateY(90vh) scale(1); }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(-20vh) scale(0.8); opacity: 0; }
+}
+#splash .sp-dna {
+  font-size: 52px; margin-bottom: 20px;
+  animation: splashIcon 0.8s cubic-bezier(0.175,0.885,0.32,1.275) 0.3s both;
+  filter: drop-shadow(0 0 20px rgba(100,180,255,0.6));
+}
+@keyframes splashIcon {
+  from { transform: scale(0) rotate(-30deg); opacity: 0; }
+  to { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+#splash .sp-name {
+  font-family: 'Lora', serif;
+  font-size: 44px; font-weight: 700;
+  color: white; letter-spacing: -1px;
+  line-height: 1; margin-bottom: 8px;
+  animation: splashName 0.7s cubic-bezier(0.175,0.885,0.32,1.275) 0.6s both;
+  text-shadow: 0 0 40px rgba(100,180,255,0.4);
+}
+@keyframes splashName {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+#splash .sp-tagline {
+  font-size: 13px; color: rgba(255,255,255,0.65);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  animation: splashTag 0.7s ease 1s both;
+  margin-bottom: 40px;
+}
+@keyframes splashTag {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#splash .sp-dots {
+  display: flex; gap: 8px;
+  animation: splashTag 0.7s ease 1.3s both;
+}
+#splash .sp-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  animation: dotPulse 1.2s ease-in-out infinite;
+}
+#splash .sp-dot:nth-child(2) { animation-delay: 0.2s; }
+#splash .sp-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotPulse {
+  0%,100% { background: rgba(255,255,255,0.25); transform: scale(1); }
+  50% { background: rgba(100,180,255,0.8); transform: scale(1.3); }
+}
+#splash .sp-glow {
+  position: absolute; width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(26,108,255,0.15) 0%, transparent 70%);
+  border-radius: 50%; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  animation: glowPulse 3s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 0.5; }
+  50% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+}
+#splash.sp-out {
+  animation: splashOut 0.6s cubic-bezier(0.4,0,1,1) forwards;
+}
+@keyframes splashOut {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.06); pointer-events: none; }
+}
+
+/* ===== PROFILE EDIT FORM ===== */
+.profile-edit-form {
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.profile-avatar-large {
+  width: 80px; height: 80px; border-radius: 24px;
+  background: linear-gradient(135deg, var(--blue), #6941c6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; margin: 0 auto 8px; cursor: pointer;
+  position: relative; transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(26,108,255,0.3);
+}
+.profile-avatar-large:active { transform: scale(0.95); }
+.profile-avatar-edit-badge {
+  position: absolute; bottom: -4px; right: -4px;
+  width: 24px; height: 24px; border-radius: 8px;
+  background: var(--blue); color: white;
+  font-size: 12px; display: flex; align-items: center; justify-content: center;
+  border: 2px solid white;
+}
+.profile-save-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--blue), #6941c6);
+  color: white; border: none; border-radius: var(--r2);
+  font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(26,108,255,0.3);
+  margin-top: 4px;
+}
+.profile-save-btn:active { transform: scale(0.97); }
+.profile-section-title {
+  font-size: 11px; font-weight: 700; color: var(--t3);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 0 16px; margin-top: 4px;
+}
+.profile-display-card {
+  margin: 0 16px 12px;
+  background: linear-gradient(135deg, var(--blue) 0%, #5b21b6 100%);
+  border-radius: var(--r); padding: 20px;
+  color: white; position: relative; overflow: hidden;
+}
+.profile-display-card::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 120px; height: 120px;
+  background: rgba(255,255,255,0.08); border-radius: 50%;
+}
+.pdc-name { font-family: 'Lora', serif; font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.pdc-role { font-size: 12px; opacity: 0.75; margin-bottom: 12px; }
+.pdc-stats { display: flex; gap: 16px; }
+.pdc-stat-val { font-size: 18px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+.pdc-stat-lbl { font-size: 10px; opacity: 0.7; }
+.share-btn {
+  width: calc(100% - 32px); margin: 0 16px;
+  padding: 13px; background: var(--w);
+  border: 1.5px solid var(--border2); border-radius: var(--r2);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--blue); cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: var(--sh);
+}
+.share-btn:active { background: var(--blue-s); transform: scale(0.97); }
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div class="sp-glow"></div>
+  <div class="sp-particles" id="spParticles"></div>
+  <div class="sp-dna">🧬</div>
+  <div class="sp-name">OmicsOS</div>
+  <div class="sp-tagline">Precision Health · AI · Multi-Omics</div>
+  <div class="sp-dots">
+    <div class="sp-dot"></div>
+    <div class="sp-dot"></div>
+    <div class="sp-dot"></div>
+  </div>
+</div>
+
+<!-- LOADER -->
+<div class="full-loader" id="loader">
+  <div class="fl-ring"></div>
+  <div class="fl-text">Running AI Analysis</div>
+  <div class="fl-sub">Fusing genomics, proteomics, metabolomics & medication data...</div>
+  <div class="fl-progress"><div class="fl-bar"></div></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toastMsg">Done</span></div>
+
+<div class="app-shell">
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="sb-time" id="clock">9:41</span>
+    <span style="font-family:'Lora',serif;font-weight:600;font-size:15px;">OmicsOS</span>
+    <span class="sb-icons">📶 🔋</span>
+  </div>
+
+  <!-- SLIDES -->
+  <div class="slides-viewport" id="viewport">
+    <div class="slides-track" id="track">
+
+      <!-- ===== SLIDE 0: HOME ===== -->
+      <div class="slide" id="slide-0">
+        <div class="home-hero">
+          <div class="hh-badge"><span class="hh-dot"></span> v2.0 LIVE</div>
+          <div class="hh-title">Your Precision<br>Health OS</div>
+          <div class="hh-sub">Multi-omics AI with medication interaction analysis. Upload your reports and get actionable insights.</div>
+          <button class="hh-btn" onclick="goTo(1)">🔬 Start Analysis →</button>
+        </div>
+
+        <div class="quick-stats">
+          <div class="qs-card"><div class="qs-icon">🧬</div><div class="qs-num">25+</div><div class="qs-label">Databases</div></div>
+          <div class="qs-card"><div class="qs-icon">🎯</div><div class="qs-num">94%</div><div class="qs-label">AI Accuracy</div></div>
+          <div class="qs-card"><div class="qs-icon">💊</div><div class="qs-num">12k+</div><div class="qs-label">Medications</div></div>
+          <div class="qs-card"><div class="qs-icon">🔒</div><div class="qs-num">E2E</div><div class="qs-label">Encrypted</div></div>
+        </div>
+
+        <div class="section-title-sm">Portals <button class="see-all" onclick="goTo(1)">See All →</button></div>
+        <div class="portal-scroll">
+          <div class="portal-chip" onclick="goTo(1)"><div class="pc-icon">👤</div><div class="pc-name">Self Analysis</div><div class="pc-desc">Upload & analyze your reports</div></div>
+          <div class="portal-chip" onclick="goTo(1)"><div class="pc-icon">💊</div><div class="pc-name">Medications</div><div class="pc-desc">Drug interaction check</div></div>
+          <div class="portal-chip" onclick="goTo(2)"><div class="pc-icon">📊</div><div class="pc-name">Results</div><div class="pc-desc">View AI predictions</div></div>
+          <div class="portal-chip" onclick="goTo(3)"><div class="pc-icon">🗄️</div><div class="pc-name">Data Sources</div><div class="pc-desc">25+ omics databases</div></div>
+        </div>
+
+        <div class="section-title-sm">Recent Activity</div>
+        <div style="padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="background:var(--w);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;display:flex;gap:10px;align-items:center;box-shadow:var(--sh);">
+            <div style="width:36px;height:36px;border-radius:10px;background:var(--blue-s);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📋</div>
+            <div style="flex:1;"><div style="font-size:12px;font-weight:700;">Sample Cancer Analysis</div><div style="font-size:10px;color:var(--t3);">TCGA · CPTAC · 14 variants found</div></div>
+            <span style="font-size:10px;color:var(--t4);">Demo</span>
+          </div>
+          <div style="background:var(--w);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;display:flex;gap:10px;align-items:center;box-shadow:var(--sh);">
+            <div style="width:36px;height:36px;border-radius:10px;background:var(--teal-s);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">💊</div>
+            <div style="flex:1;"><div style="font-size:12px;font-weight:700;">Medication Check</div><div style="font-size:10px;color:var(--t3);">3 drugs · 2 interactions flagged</div></div>
+            <span style="font-size:10px;color:var(--t4);">Demo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 1: ANALYSIS ===== -->
+      <div class="slide" id="slide-1">
+        <div class="slide-header">
+          <div class="slide-header-row">
+            <div class="sh-left">
+              <div class="sh-badge">Patient Portal</div>
+              <div class="sh-title">Self Analysis</div>
+            </div>
+            <button class="sh-btn" onclick="resetAnalysis()">↺</button>
+          </div>
+        </div>
+
+        <div style="padding: 12px 16px 0;">
+
+          <!-- Section 1: Personal Info -->
+          <div class="a-section open" id="sec-personal">
+            <div class="a-section-header" onclick="toggleSection('sec-personal')">
+              <div class="a-section-icon">👤</div>
+              <div class="a-section-info">
+                <div class="a-section-name">Personal Info</div>
+                <div class="a-section-sub">Basic patient details</div>
+              </div>
+              <div class="a-section-arrow">›</div>
+            </div>
+            <div class="a-section-body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Full Name</label>
+                  <input class="form-input" id="pName" placeholder="Your name" type="text">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Age</label>
+                  <input class="form-input" id="pAge" placeholder="e.g. 42" type="number">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Disease / Health Focus</label>
+                <input class="form-input" id="pDisease" placeholder="e.g. Breast Cancer, Diabetes, Heart Disease..." type="text">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Data Type</label>
+                <select class="form-select" id="pDataType">
+                  <option value="">Select type...</option>
+                  <option>Whole Genome Sequencing (WGS)</option>
+                  <option>Whole Exome Sequencing (WES)</option>
+                  <option>SNP / Variant Report</option>
+                  <option>RNA Sequencing</option>
+                  <option>Proteomics Panel</option>
+                  <option>Metabolomics Panel</option>
+                  <option>Blood / Lab Panel</option>
+                  <option>Tumor Biopsy Report</option>
+                  <option>Pharmacogenomics</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Omics Layers</label>
+                <div class="chips-wrap">
+                  <div class="chip on" onclick="toggleChip(this)">🧬 Genomics</div>
+                  <div class="chip" onclick="toggleChip(this)">📊 Transcriptomics</div>
+                  <div class="chip" onclick="toggleChip(this)">🧫 Proteomics</div>
+                  <div class="chip" onclick="toggleChip(this)">⚗️ Metabolomics</div>
+                  <div class="chip" onclick="toggleChip(this)">💊 Pharmaco</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Upload Report -->
+          <div class="a-section open" id="sec-upload">
+            <div class="a-section-header" onclick="toggleSection('sec-upload')">
+              <div class="a-section-icon">📁</div>
+              <div class="a-section-info">
+                <div class="a-section-name">Upload Report</div>
+                <div class="a-section-sub">PDF, VCF, CSV, FASTQ accepted</div>
+              </div>
+              <div class="a-section-arrow">›</div>
+            </div>
+            <div class="a-section-body">
+              <div class="upload-zone" id="uploadZone">
+                <input type="file" accept=".pdf,.csv,.vcf,.fastq,.txt,.xlsx,.json" onchange="handleFile(event)" multiple>
+                <div class="uz-icon">📂</div>
+                <div class="uz-title">Tap to upload report</div>
+                <div class="uz-sub">Or drag & drop from your device<br>All formats accepted</div>
+                <div class="uz-formats">
+                  <span class="fmt">PDF</span><span class="fmt">VCF</span><span class="fmt">CSV</span>
+                  <span class="fmt">FASTQ</span><span class="fmt">XLSX</span><span class="fmt">JSON</span>
+                </div>
+              </div>
+              <div class="file-attached" id="fileAttached">
+                <div class="fa-icon">📄</div>
+                <div class="fa-info">
+                  <div class="fa-name" id="faName">report.pdf</div>
+                  <div class="fa-size" id="faSize">2.4 MB · Ready</div>
+                </div>
+                <button class="fa-rm" onclick="removeFile()">✕</button>
+              </div>
+              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                <label style="flex:1;min-width:100px;" class="action-btn" style="cursor:pointer;">
+                  <input type="file" style="display:none" onchange="handleFile(event)">
+                  📱 Browse Files
+                </label>
+                <button class="action-btn" onclick="showToast('🔗 Lab portal integration coming soon!')">🔗 Lab Portal</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Medications (KEY FEATURE) -->
+          <div class="a-section open" id="sec-meds">
+            <div class="a-section-header" onclick="toggleSection('sec-meds')">
+              <div class="a-section-icon">💊</div>
+              <div class="a-section-info">
+                <div class="a-section-name">Current Medications</div>
+                <div class="a-section-sub">Add all drugs for interaction analysis</div>
+              </div>
+              <div class="a-section-arrow">›</div>
+            </div>
+            <div class="a-section-body">
+              <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:10px;">
+                Add all medications you are currently taking. OmicsOS will check for genomic interactions, contraindications, and personalized dosing based on your omics profile.
+              </div>
+              <div class="form-label">Quick Add Common Medications</div>
+              <div class="med-quick" id="medQuickPicks">
+                <div class="med-pick" onclick="addMedFromPick(this)">Metformin</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Atorvastatin</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Tamoxifen</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Aspirin</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Warfarin</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Clopidogrel</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Omeprazole</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Ibuprofen</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Paracetamol</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Amlodipine</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Trastuzumab</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Imatinib</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Pembrolizumab</div>
+                <div class="med-pick" onclick="addMedFromPick(this)">Letrozole</div>
+              </div>
+              <div class="add-med-row" style="margin-top:12px;">
+                <input class="form-input add-med-input" id="medInput" placeholder="Drug name (e.g. Lisinopril 10mg)" type="text" onkeydown="if(event.key==='Enter')addMedManual()">
+                <button class="add-med-btn" onclick="addMedManual()">+ Add</button>
+              </div>
+              <div style="margin-top:4px;">
+                <input class="form-input" id="medDoseInput" placeholder="Dose & frequency (e.g. 10mg twice daily)" type="text" style="margin-top:4px;">
+              </div>
+              <div class="med-list" id="medList"></div>
+              <div style="font-size:11px;color:var(--t3);margin-top:8px;line-height:1.6;background:var(--purple-s);border-radius:8px;padding:8px 10px;border:1px solid #d6bbfb;">
+                💡 <strong style="color:var(--purple);">PGx Analysis:</strong> Your genomic profile will be cross-referenced with pharmacogenomics databases (PharmGKB, CPIC) to predict how you metabolize each drug.
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Clinical Notes -->
+          <div class="a-section" id="sec-notes">
+            <div class="a-section-header" onclick="toggleSection('sec-notes')">
+              <div class="a-section-icon">📝</div>
+              <div class="a-section-info">
+                <div class="a-section-name">Clinical Notes</div>
+                <div class="a-section-sub">Symptoms, history, allergies</div>
+              </div>
+              <div class="a-section-arrow">›</div>
+            </div>
+            <div class="a-section-body">
+              <div class="form-group">
+                <label class="form-label">Symptoms / Chief Complaint</label>
+                <textarea class="form-textarea" id="pSymptoms" placeholder="Describe your main symptoms or reason for analysis..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Known Allergies</label>
+                <input class="form-input" id="pAllergies" placeholder="e.g. Penicillin, Sulfa drugs, None..." type="text">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Family History</label>
+                <input class="form-input" id="pFamily" placeholder="e.g. Mother — Breast Cancer, Father — Diabetes..." type="text">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 5: Analysis Settings -->
+          <div class="a-section" id="sec-settings">
+            <div class="a-section-header" onclick="toggleSection('sec-settings')">
+              <div class="a-section-icon">⚙️</div>
+              <div class="a-section-info">
+                <div class="a-section-name">Analysis Settings</div>
+                <div class="a-section-sub">Depth and focus options</div>
+              </div>
+              <div class="a-section-arrow">›</div>
+            </div>
+            <div class="a-section-body">
+              <div class="form-group">
+                <label class="form-label">Analysis Depth</label>
+                <select class="form-select" id="pDepth">
+                  <option>Basic — Risk summary & key findings</option>
+                  <option selected>Standard — Drug response + pathway analysis</option>
+                  <option>Advanced — Full multi-omics + SHAP + PGx</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Reference Population</label>
+                <select class="form-select" id="pPop">
+                  <option>South Asian (Indian subcontinent)</option>
+                  <option>East Asian</option>
+                  <option>European</option>
+                  <option>African</option>
+                  <option>Mixed / Global</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Include in Analysis</label>
+                <div class="chips-wrap">
+                  <div class="chip on" onclick="toggleChip(this)">Drug Response</div>
+                  <div class="chip on" onclick="toggleChip(this)">Pathway Analysis</div>
+                  <div class="chip on" onclick="toggleChip(this)">Med Interactions</div>
+                  <div class="chip" onclick="toggleChip(this)">Nutrigenomics</div>
+                  <div class="chip" onclick="toggleChip(this)">Ancestry</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="padding: 0 16px;">
+          <button class="run-btn" id="runBtn" onclick="runAnalysis()">
+            🚀 Run AI Analysis
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 2: RESULTS ===== -->
+      <div class="slide" id="slide-2">
+        <div class="slide-header">
+          <div class="slide-header-row">
+            <div class="sh-left">
+              <div class="sh-badge">AI Analysis Output</div>
+              <div class="sh-title">Results</div>
+            </div>
+            <button class="sh-btn" onclick="downloadReport()">⬇️</button>
+          </div>
+        </div>
+
+        <div id="resultsEmpty" style="padding:40px 20px;text-align:center;">
+          <div style="font-size:48px;margin-bottom:12px;">🔬</div>
+          <div style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-bottom:8px;">No Analysis Yet</div>
+          <div style="font-size:13px;color:var(--t3);line-height:1.7;margin-bottom:20px;">Complete the analysis form and run AI to see your results here.</div>
+          <button class="run-btn" style="margin:0;" onclick="goTo(1)">Go to Analysis →</button>
+        </div>
+
+        <div id="resultsContent" style="display:none;">
+          <!-- Score card -->
+          <div style="padding:12px 16px 0;">
+            <div class="result-score-card">
+              <div class="rsc-bg"></div>
+              <div class="rsc-badge" id="rBadge">COMPLETE</div>
+              <div class="rsc-title">Patient Analysis Report</div>
+              <div class="rsc-patient" id="rPatient">—</div>
+              <div class="rsc-disease" id="rDisease">—</div>
+              <div class="rsc-grid">
+                <div class="rsc-metric"><div class="rsc-val" id="rRisk">—</div><div class="rsc-lbl">Risk Score</div></div>
+                <div class="rsc-metric"><div class="rsc-val" id="rVariants">—</div><div class="rsc-lbl">Variants</div></div>
+                <div class="rsc-metric"><div class="rsc-val" id="rPathways">—</div><div class="rsc-lbl">Pathways</div></div>
+                <div class="rsc-metric"><div class="rsc-val" id="rConf">—</div><div class="rsc-lbl">Confidence</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Drug Response -->
+          <div class="results-wrap">
+            <div class="result-card">
+              <div class="rc-header">
+                <div><div class="rc-title">💊 Drug Response Predictions</div><div class="rc-sub">SHAP-ranked · Based on TCGA, CPTAC, PharmGKB</div></div>
+              </div>
+              <div class="rc-body" id="drugResponseList"></div>
+            </div>
+
+            <!-- Medication Interactions -->
+            <div class="result-card" id="medInteractionCard">
+              <div class="rc-header">
+                <div><div class="rc-title">⚠️ Medication × Genomic Interactions</div><div class="rc-sub">PGx analysis · PharmGKB · CPIC guidelines</div></div>
+              </div>
+              <div class="rc-body" id="medInteractionList"></div>
+            </div>
+
+            <!-- Pathway Analysis -->
+            <div class="result-card">
+              <div class="rc-header">
+                <div><div class="rc-title">🔀 Pathway Activity</div><div class="rc-sub">KEGG · Reactome pathway enrichment</div></div>
+              </div>
+              <div class="rc-body" id="pathwayList"></div>
+            </div>
+
+            <!-- Variants -->
+            <div class="result-card">
+              <div class="rc-header">
+                <div><div class="rc-title">🧬 Key Genetic Variants</div><div class="rc-sub">ClinVar · dbSNP · COSMIC annotations</div></div>
+              </div>
+              <div class="rc-body" id="variantList"></div>
+            </div>
+          </div>
+
+          <div class="disclaimer-card">
+            <div class="dc-icon2">⚠️</div>
+            <div class="dc-text"><strong>Medical Disclaimer:</strong> This AI analysis is for informational purposes only. It is NOT a medical diagnosis. Consult a qualified healthcare professional before making any treatment decisions.</div>
+          </div>
+
+          <!-- Action buttons -->
+          <div class="action-row">
+            <button class="action-btn primary" onclick="downloadReport()">⬇️ PDF</button>
+            <button class="action-btn teal" onclick="showToast('👨‍⚕️ Sharing with doctor...')">👨‍⚕️ Share</button>
+            <button class="action-btn" onclick="downloadCSV()">📊 CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 3: DATA SOURCES ===== -->
+      <div class="slide" id="slide-3">
+        <div class="slide-header">
+          <div class="slide-header-row">
+            <div class="sh-left">
+              <div class="sh-badge">25+ Integrated</div>
+              <div class="sh-title">Data Sources</div>
+            </div>
+            <button class="sh-btn" onclick="showToast('🔄 Syncing databases...')">🔄</button>
+          </div>
+        </div>
+
+        <div class="ds-search-wrap">
+          <div class="ds-search-bar">
+            <span>🔍</span>
+            <input class="ds-input" id="dsInput" placeholder="Search disease, gene, pathway..." onkeydown="if(event.key==='Enter')searchDisease()">
+            <button class="ds-go" onclick="searchDisease()">Search</button>
+          </div>
+        </div>
+
+        <div class="quick-pills">
+          <div class="qpill" onclick="qSearch('Breast Cancer')">Breast Cancer</div>
+          <div class="qpill" onclick="qSearch('BRCA1')">BRCA1</div>
+          <div class="qpill" onclick="qSearch('Lung Cancer')">Lung Cancer</div>
+          <div class="qpill" onclick="qSearch('TP53')">TP53</div>
+          <div class="qpill" onclick="qSearch('Diabetes')">Diabetes</div>
+          <div class="qpill" onclick="qSearch('Alzheimer')">Alzheimer's</div>
+          <div class="qpill" onclick="qSearch('Colorectal')">Colorectal</div>
+        </div>
+
+        <!-- Disease results -->
+        <div class="dis-results" id="disResults" style="margin-top:10px;">
+          <div class="dis-header">
+            <div class="dis-header-title" id="disTitle">Results for "Breast Cancer"</div>
+            <div class="dis-count" id="disCount">18 DBs</div>
+          </div>
+          <div id="disRows"></div>
+        </div>
+
+        <div class="db-category-scroll">
+          <button class="db-cat-btn active" onclick="switchDbCat('all',this)">All</button>
+          <button class="db-cat-btn" onclick="switchDbCat('genomics',this)">🧬 Genomics</button>
+          <button class="db-cat-btn" onclick="switchDbCat('transcriptomics',this)">📊 Transcript.</button>
+          <button class="db-cat-btn" onclick="switchDbCat('proteomics',this)">🧫 Proteomics</button>
+          <button class="db-cat-btn" onclick="switchDbCat('metabolomics',this)">⚗️ Metabol.</button>
+          <button class="db-cat-btn" onclick="switchDbCat('cancer',this)">🎗️ Cancer</button>
+          <button class="db-cat-btn" onclick="switchDbCat('singlecell',this)">🔬 Single-Cell</button>
+        </div>
+
+        <div class="db-cards" id="dbCards"></div>
+        <div style="height:20px;"></div>
+      </div>
+
+      <!-- ===== SLIDE 4: HOW TO GET REPORTS ===== -->
+      <div class="slide" id="slide-4">
+        <div class="slide-header">
+          <div class="slide-header-row">
+            <div class="sh-left">
+              <div class="sh-badge">12 Platforms</div>
+              <div class="sh-title">Get Reports</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:12px 16px 8px;font-size:12px;color:var(--t3);line-height:1.7;">
+          Download your health data from any of these platforms worldwide, then upload to OmicsOS for AI-powered analysis.
+        </div>
+
+        <div class="howto-cards" id="howtoCards"></div>
+        <div style="height:20px;"></div>
+      </div>
+
+      <!-- ===== SLIDE 5: PROFILE ===== -->
+      <div class="slide" id="slide-5">
+        <div class="slide-header">
+          <div class="slide-header-row">
+            <div class="sh-left">
+              <div class="sh-badge">Account</div>
+              <div class="sh-title">My Profile</div>
+            </div>
+            <button class="sh-btn" id="profileEditToggle" onclick="toggleProfileEdit()">✏️</button>
+          </div>
+        </div>
+
+        <!-- Profile Display View -->
+        <div id="profileView">
+          <div class="profile-display-card">
+            <div style="display:flex;gap:14px;align-items:center;position:relative;z-index:1;">
+              <div style="width:60px;height:60px;border-radius:18px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;" id="pvAvatar">👤</div>
+              <div>
+                <div class="pdc-name" id="pvName">Your Name</div>
+                <div class="pdc-role" id="pvRole">Researcher / Patient</div>
+                <div style="font-size:11px;opacity:0.7;" id="pvEmail">—</div>
+              </div>
+            </div>
+            <div class="pdc-stats" style="margin-top:16px;position:relative;z-index:1;">
+              <div><div class="pdc-stat-val" id="pvAge">—</div><div class="pdc-stat-lbl">Age</div></div>
+              <div><div class="pdc-stat-val" id="pvBlood">—</div><div class="pdc-stat-lbl">Blood Type</div></div>
+              <div><div class="pdc-stat-val" id="pvAnalyses">0</div><div class="pdc-stat-lbl">Analyses</div></div>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <!-- Share Link Button -->
+          <button class="share-btn" onclick="shareApp()">
+            🔗 Share OmicsOS App
+          </button>
+
+          <div style="height:16px;"></div>
+
+          <!-- Profile Info Summary -->
+          <div class="profile-section-title">Health Info</div>
+          <div class="profile-menu" style="padding-top:8px;">
+            <div class="pm-item">
+              <div class="pm-icon" style="background:var(--red-s);">🏥</div>
+              <div class="pm-text"><div class="pm-title">Conditions</div><div class="pm-sub" id="pvConditions">Not set — tap ✏️ to edit</div></div>
+            </div>
+            <div class="pm-item">
+              <div class="pm-icon" style="background:var(--amber-s);">⚠️</div>
+              <div class="pm-text"><div class="pm-title">Allergies</div><div class="pm-sub" id="pvAllergies">Not set</div></div>
+            </div>
+            <div class="pm-item">
+              <div class="pm-icon" style="background:var(--purple-s);">🧬</div>
+              <div class="pm-text"><div class="pm-title">Genetic Background</div><div class="pm-sub" id="pvEthnicity">Not set</div></div>
+            </div>
+          </div>
+
+          <div class="profile-section-title" style="margin-top:4px;">Account</div>
+          <div class="profile-menu" style="padding-top:8px;">
+            <div class="pm-item" onclick="showToast('📋 Opening health history...')">
+              <div class="pm-icon" style="background:var(--blue-s);">📋</div>
+              <div class="pm-text"><div class="pm-title">Health History</div><div class="pm-sub">View past analyses & reports</div></div>
+              <div class="pm-arrow">›</div>
+            </div>
+            <div class="pm-item" onclick="showToast('💊 Opening medication log...')">
+              <div class="pm-icon" style="background:var(--purple-s);">💊</div>
+              <div class="pm-text"><div class="pm-title">Medication Log</div><div class="pm-sub">Track current & past medications</div></div>
+              <div class="pm-arrow">›</div>
+            </div>
+            <div class="pm-item" onclick="goTo(4)">
+              <div class="pm-icon" style="background:var(--teal-s);">📁</div>
+              <div class="pm-text"><div class="pm-title">Get Omics Reports</div><div class="pm-sub">Where to download your data</div></div>
+              <div class="pm-arrow">›</div>
+            </div>
+            <div class="pm-item" onclick="showToast('👨‍⚕️ Doctor sharing settings...')">
+              <div class="pm-icon" style="background:var(--green-s);">👨‍⚕️</div>
+              <div class="pm-text"><div class="pm-title">Share with Doctor</div><div class="pm-sub">Manage doctor access</div></div>
+              <div class="pm-arrow">›</div>
+            </div>
+            <div class="pm-item" onclick="showToast('🔒 Privacy settings...')">
+              <div class="pm-icon" style="background:var(--amber-s);">🔒</div>
+              <div class="pm-text"><div class="pm-title">Privacy & Security</div><div class="pm-sub">Data controls, HIPAA settings</div></div>
+              <div class="pm-arrow">›</div>
+            </div>
+          </div>
+
+          <div style="margin:8px 16px 0;padding:12px 14px;background:white;border-radius:var(--r2);border:1px solid var(--border);text-align:center;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px;">🇮🇳 Made in Jaipur, India</div>
+            <div style="font-size:11px;color:var(--t3);">OmicsOS v2.0 · HIPAA · GDPR · DPDP compliant</div>
+            <div style="display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap;">
+              <span style="font-size:9px;background:var(--bg);border:1px solid var(--border2);color:var(--t3);padding:2px 6px;border-radius:4px;font-weight:700;font-family:'JetBrains Mono',monospace;">HIPAA</span>
+              <span style="font-size:9px;background:var(--bg);border:1px solid var(--border2);color:var(--t3);padding:2px 6px;border-radius:4px;font-weight:700;font-family:'JetBrains Mono',monospace;">GDPR</span>
+              <span style="font-size:9px;background:var(--bg);border:1px solid var(--border2);color:var(--t3);padding:2px 6px;border-radius:4px;font-weight:700;font-family:'JetBrains Mono',monospace;">DPDP</span>
+              <span style="font-size:9px;background:var(--bg);border:1px solid var(--border2);color:var(--t3);padding:2px 6px;border-radius:4px;font-weight:700;font-family:'JetBrains Mono',monospace;">HL7 FHIR</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Edit View -->
+        <div id="profileEditView" style="display:none;">
+          <div class="profile-edit-form">
+            <div style="text-align:center;padding:8px 0 4px;">
+              <div class="profile-avatar-large" id="editAvatar" onclick="cycleAvatar()">
+                <span id="editAvatarEmoji">👤</span>
+                <div class="profile-avatar-edit-badge">✏️</div>
+              </div>
+              <div style="font-size:11px;color:var(--t3);margin-top:4px;">Tap to change avatar</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input class="form-input" id="epName" placeholder="Your full name" type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input class="form-input" id="epEmail" placeholder="your@email.com" type="email">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Role / Title</label>
+              <input class="form-input" id="epRole" placeholder="e.g. Researcher, Patient, Oncologist..." type="text">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Age</label>
+                <input class="form-input" id="epAge" placeholder="Age" type="number">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Blood Type</label>
+                <select class="form-select" id="epBlood">
+                  <option value="—">Unknown</option>
+                  <option>A+</option><option>A-</option>
+                  <option>B+</option><option>B-</option>
+                  <option>AB+</option><option>AB-</option>
+                  <option>O+</option><option>O-</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Known Conditions / Disease Focus</label>
+              <input class="form-input" id="epConditions" placeholder="e.g. Breast Cancer, Type 2 Diabetes..." type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Allergies</label>
+              <input class="form-input" id="epAllergies" placeholder="e.g. Penicillin, Sulfa drugs, None..." type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Genetic / Ethnic Background</label>
+              <select class="form-select" id="epEthnicity">
+                <option value="">Select background...</option>
+                <option>South Asian (Indian subcontinent)</option>
+                <option>East Asian</option>
+                <option>European</option>
+                <option>African</option>
+                <option>Middle Eastern</option>
+                <option>Latin American</option>
+                <option>Mixed / Global</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Institution / Organization</label>
+              <input class="form-input" id="epInstitution" placeholder="e.g. AIIMS, IIT, Hospital name..." type="text">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bio / Notes</label>
+              <textarea class="form-textarea" id="epBio" placeholder="Short bio, research focus, health goals..."></textarea>
+            </div>
+
+            <button class="profile-save-btn" onclick="saveProfile()">💾 Save Profile</button>
+            <button class="action-btn" onclick="toggleProfileEdit()" style="margin-top:0;">Cancel</button>
+          </div>
+        </div>
+
+        <div style="height:20px;"></div>
+      </div>
+
+    </div><!-- /slides-track -->
+  </div><!-- /slides-viewport -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-0" onclick="goTo(0)">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </button>
+    <button class="nav-item" id="nav-1" onclick="goTo(1)">
+      <div class="nav-icon">🔬</div>
+      <div class="nav-label">Analyze</div>
+    </button>
+    <button class="nav-item" id="nav-2" onclick="goTo(2)">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">Results</div>
+    </button>
+    <button class="nav-item" id="nav-3" onclick="goTo(3)">
+      <div class="nav-icon">🗄️</div>
+      <div class="nav-label">Data</div>
+    </button>
+    <button class="nav-item" id="nav-4" onclick="goTo(4)">
+      <div class="nav-icon">📁</div>
+      <div class="nav-label">Reports</div>
+    </button>
+    <button class="nav-item" id="nav-5" onclick="goTo(5)">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Profile</div>
+    </button>
+  </nav>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ==============================
+// SPLASH SCREEN
+// ==============================
+(function() {
+  // Generate particles
+  const container = document.getElementById('spParticles');
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'sp-particle';
+    const size = 6 + Math.random() * 20;
+    p.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;animation-duration:${4+Math.random()*6}s;animation-delay:${Math.random()*4}s;`;
+    container.appendChild(p);
+  }
+  // Dismiss after 5 seconds
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    splash.classList.add('sp-out');
+    setTimeout(() => { splash.style.display = 'none'; }, 600);
+  }, 5000);
+})();
+
+// ==============================
+// NAVIGATION (click only, no swipe)
+// ==============================
+let currentSlide = 0;
+const totalSlides = 6;
+
+function goTo(n) {
+  currentSlide = Math.max(0, Math.min(n, totalSlides - 1));
+  document.getElementById('track').style.transform = `translateX(-${currentSlide * 100}%)`;
+  document.querySelectorAll('.nav-item').forEach((el, i) => el.classList.toggle('active', i === currentSlide));
+  document.getElementById('slide-' + currentSlide).scrollTop = 0;
+}
+
+// ==============================
+// CLOCK
+// ==============================
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+// ==============================
+// SECTION TOGGLE
+// ==============================
+function toggleSection(id) {
+  const sec = document.getElementById(id);
+  sec.classList.toggle('open');
+}
+function toggleChip(el) { el.classList.toggle('on'); }
+
+// ==============================
+// FILE UPLOAD
+// ==============================
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const sz = file.size < 1048576 ? (file.size/1024).toFixed(1)+' KB' : (file.size/1048576).toFixed(1)+' MB';
+  document.getElementById('faName').textContent = file.name;
+  document.getElementById('faSize').textContent = sz + ' · Ready to analyze';
+  document.getElementById('fileAttached').classList.add('show');
+  showToast('✅ ' + file.name + ' attached');
+}
+function removeFile() {
+  document.getElementById('fileAttached').classList.remove('show');
+  showToast('🗑️ File removed');
+}
+
+// ==============================
+// MEDICATIONS
+// ==============================
+let medications = [];
+const medColors = ['#1a6cff','#00b8a9','#f79009','#ef4444','#6941c6','#12b76a','#f04438','#0ba5ec'];
+
+function addMedManual() {
+  const name = document.getElementById('medInput').value.trim();
+  const dose = document.getElementById('medDoseInput').value.trim();
+  if (!name) { showToast('⚠️ Enter medication name'); return; }
+  addMed(name, dose || 'Dose not specified');
+  document.getElementById('medInput').value = '';
+  document.getElementById('medDoseInput').value = '';
+}
+
+function addMedFromPick(el) {
+  addMed(el.textContent, 'Standard dose');
+}
+
+function addMed(name, dose) {
+  if (medications.find(m => m.name.toLowerCase() === name.toLowerCase())) {
+    showToast('⚠️ ' + name + ' already added'); return;
+  }
+  medications.push({ name, dose });
+  renderMeds();
+  showToast('💊 Added: ' + name);
+}
+
+function removeMed(i) {
+  medications.splice(i, 1);
+  renderMeds();
+}
+
+function renderMeds() {
+  const list = document.getElementById('medList');
+  if (medications.length === 0) { list.innerHTML = ''; return; }
+  list.innerHTML = medications.map((m, i) => `
+    <div class="med-item">
+      <div class="med-color" style="background:${medColors[i%medColors.length]}"></div>
+      <div class="med-info">
+        <div class="med-name">${m.name}</div>
+        <div class="med-dose">${m.dose}</div>
+      </div>
+      <button class="med-rm" onclick="removeMed(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+// ==============================
+// TOAST
+// ==============================
+let toastT;
+function showToast(msg) {
+  document.getElementById('toastMsg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ==============================
+// ANALYSIS ENGINE
+// ==============================
+function runAnalysis() {
+  const disease = document.getElementById('pDisease').value || 'Cancer';
+  const name = document.getElementById('pName').value || 'Patient';
+  document.getElementById('loader').classList.add('show');
+  document.getElementById('runBtn').disabled = true;
+
+  // simulate progress steps
+  const steps = ['Loading TCGA data...', 'Fusing omics layers...', 'Running deep learning model...', 'Computing drug response...', 'Analyzing medications...', 'Generating SHAP explanations...'];
+  let si = 0;
+  const stepTimer = setInterval(() => {
+    if (si < steps.length) document.querySelector('.fl-sub').textContent = steps[si++];
+    else clearInterval(stepTimer);
+  }, 400);
+
+  setTimeout(() => {
+    clearInterval(stepTimer);
+    const results = generateResults(disease, name);
+    populateResults(results);
+    document.getElementById('loader').classList.remove('show');
+    document.getElementById('runBtn').disabled = false;
+    document.getElementById('runBtn').textContent = '✅ Re-run Analysis';
+    goTo(2);
+    profileData.analyses = (profileData.analyses || 0) + 1;
+    try { localStorage.setItem('omicsOS_profile', JSON.stringify(profileData)); } catch(e) {}
+    document.getElementById('pvAnalyses').textContent = profileData.analyses;
+    showToast('✅ Analysis complete! View results →');
+  }, 2800);
+}
+
+function generateResults(disease, name) {
+  const isCancer = disease.toLowerCase().includes('cancer') || disease.toLowerCase().includes('tumor') || disease.toLowerCase().includes('carcinoma');
+  const r = {
+    name, disease,
+    riskScore: isCancer ? (6+Math.random()*3).toFixed(1)+'/10' : (2+Math.random()*4).toFixed(1)+'/10',
+    variants: isCancer ? Math.floor(10+Math.random()*12) : Math.floor(2+Math.random()*6),
+    pathways: isCancer ? Math.floor(6+Math.random()*7) : Math.floor(2+Math.random()*4),
+    confidence: Math.floor(83+Math.random()*13) + '%',
+    drugs: isCancer ? [
+      {name:'Targeted Therapy', pct: Math.floor(78+Math.random()*17), color:'#12b76a'},
+      {name:'Immunotherapy', pct: Math.floor(65+Math.random()*18), color:'#12b76a'},
+      {name:'Hormone Therapy', pct: Math.floor(52+Math.random()*18), color:'#f79009'},
+      {name:'Chemotherapy A', pct: Math.floor(40+Math.random()*18), color:'#f79009'},
+      {name:'Chemotherapy B', pct: Math.floor(25+Math.random()*18), color:'#f04438'},
+    ] : [
+      {name:'Drug Candidate 1', pct: Math.floor(72+Math.random()*18), color:'#12b76a'},
+      {name:'Drug Candidate 2', pct: Math.floor(58+Math.random()*18), color:'#12b76a'},
+      {name:'Drug Candidate 3', pct: Math.floor(42+Math.random()*18), color:'#f79009'},
+      {name:'Drug Candidate 4', pct: Math.floor(28+Math.random()*18), color:'#f04438'},
+    ],
+    pathwayData: isCancer ? [
+      {name:'PI3K/AKT/mTOR', pct:Math.floor(65+Math.random()*25), color:'#ef4444'},
+      {name:'HER2/ERBB Signaling', pct:Math.floor(60+Math.random()*25), color:'#ef4444'},
+      {name:'p53 Tumor Suppression', pct:Math.floor(20+Math.random()*20), color:'#12b76a'},
+      {name:'DNA Damage Response', pct:Math.floor(30+Math.random()*25), color:'#f79009'},
+      {name:'MAPK/ERK Cascade', pct:Math.floor(50+Math.random()*25), color:'#f79009'},
+    ] : [
+      {name:'Insulin Signaling', pct:Math.floor(55+Math.random()*30), color:'#f79009'},
+      {name:'Metabolic Regulation', pct:Math.floor(45+Math.random()*30), color:'#f79009'},
+      {name:'Inflammatory Response', pct:Math.floor(40+Math.random()*25), color:'#f79009'},
+      {name:'Oxidative Stress', pct:Math.floor(35+Math.random()*25), color:'#ef4444'},
+    ],
+    variants: isCancer ? [
+      {gene:'BRCA1', mut:'c.5266dupC · Frameshift', impact:'HIGH'},
+      {gene:'TP53', mut:'R175H · Missense', impact:'HIGH'},
+      {gene:'PIK3CA', mut:'H1047R · Activating', impact:'MED'},
+      {gene:'KRAS', mut:'G12D · Driver mutation', impact:'HIGH'},
+      {gene:'PTEN', mut:'Loss of function', impact:'MED'},
+    ] : [
+      {gene:'TCF7L2', mut:'rs7903146 · Risk allele', impact:'MED'},
+      {gene:'PPARG', mut:'Pro12Ala variant', impact:'LOW'},
+      {gene:'KCNJ11', mut:'E23K polymorphism', impact:'MED'},
+    ],
+    medications: [...medications]
+  };
+  return r;
+}
+
+function populateResults(r) {
+  document.getElementById('resultsEmpty').style.display = 'none';
+  document.getElementById('resultsContent').style.display = 'block';
+
+  document.getElementById('rPatient').textContent = r.name;
+  document.getElementById('rDisease').textContent = r.disease + ' · Standard Analysis';
+  document.getElementById('rRisk').textContent = r.riskScore;
+  document.getElementById('rVariants').textContent = r.variants;
+  document.getElementById('rPathways').textContent = r.pathways;
+  document.getElementById('rConf').textContent = r.confidence;
+
+  // Drug bars
+  const drugEl = document.getElementById('drugResponseList');
+  drugEl.innerHTML = r.drugs.map(d => {
+    const conf = d.pct > 70 ? {label:'HIGH', bg:'var(--green-s)', c:'var(--green)'} : d.pct > 50 ? {label:'MED', bg:'var(--amber-s)', c:'var(--amber)'} : {label:'LOW', bg:'var(--red-s)', c:'var(--red)'};
+    return `<div class="drug-row">
+      <div class="dr-name">${d.name}</div>
+      <div class="dr-bar-bg"><div class="dr-bar" style="width:0%;background:${d.color}" data-w="${d.pct}"></div></div>
+      <div class="dr-pct" style="color:${d.color}">${d.pct}%</div>
+      <div class="conf-pip" style="background:${d.color}"></div>
+    </div>`;
+  }).join('');
+  setTimeout(() => document.querySelectorAll('[data-w]').forEach(el => el.style.width = el.dataset.w + '%'), 100);
+
+  // Medication interactions
+  const medEl = document.getElementById('medInteractionList');
+  const medCard = document.getElementById('medInteractionCard');
+  if (r.medications.length === 0) {
+    medEl.innerHTML = '<div style="font-size:12px;color:var(--t3);padding:8px 0;text-align:center;">No medications added. <button onclick="goTo(1)" style="color:var(--blue);background:none;border:none;cursor:pointer;font-weight:700;font-family:Outfit,sans-serif;">Add medications →</button></div>';
+  } else {
+    medEl.innerHTML = r.medications.map(m => {
+      const pgx = getPGxData(m.name);
+      return `<div class="med-interaction-row">
+        <div class="mir-icon">${pgx.icon}</div>
+        <div class="mir-info">
+          <div class="mir-name">${m.name}</div>
+          <div class="mir-desc">${pgx.desc}</div>
+        </div>
+        <div class="mir-badge ${pgx.cls}">${pgx.level}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Pathways
+  const pathEl = document.getElementById('pathwayList');
+  pathEl.innerHTML = r.pathwayData.map(p => `
+    <div class="progress-bar">
+      <div class="pb-top"><span class="pb-label">${p.name}</span><span class="pb-val" style="color:${p.color}">${p.pct}%</span></div>
+      <div class="pb-track"><div class="pb-fill" style="width:0%;background:${p.color}" data-w="${p.pct}"></div></div>
+    </div>
+  `).join('');
+  setTimeout(() => document.querySelectorAll('.pb-fill[data-w]').forEach(el => el.style.width = el.dataset.w + '%'), 200);
+
+  // Variants
+  const varEl = document.getElementById('variantList');
+  varEl.innerHTML = r.variants.map(v => `
+    <div class="variant-item">
+      <div class="var-gene">${v.gene}</div>
+      <div class="var-mut">${v.mut}</div>
+      <div class="var-impact ${v.impact === 'HIGH' ? 'vi-high' : v.impact === 'MED' ? 'vi-med' : 'vi-low'}">${v.impact}</div>
+    </div>
+  `).join('');
+
+  // store for download
+  window._lastResults = r;
+}
+
+// PGx medication database
+function getPGxData(medName) {
+  const pgxDb = {
+    'Tamoxifen': {icon:'🔬', level:'CAUTION', cls:'mir-warn', desc:'CYP2D6 metabolizer status affects efficacy. Poor metabolizers may have reduced benefit. CPIC recommends dose adjustment.'},
+    'Warfarin': {icon:'⚠️', level:'ADJUST', cls:'mir-warn', desc:'CYP2C9 & VKORC1 variants strongly influence dosing. INR monitoring required. PharmGKB Level 1A interaction.'},
+    'Clopidogrel': {icon:'⚠️', level:'CAUTION', cls:'mir-warn', desc:'CYP2C19 poor metabolizers show reduced antiplatelet effect. Consider alternative if loss-of-function allele detected.'},
+    'Metformin': {icon:'✅', level:'SAFE', cls:'mir-ok', desc:'No significant PGx interactions identified. OCT1/OCT2 variants may affect GI tolerability at standard doses.'},
+    'Atorvastatin': {icon:'✅', level:'SAFE', cls:'mir-ok', desc:'SLCO1B1 c.521T>C variant may increase myopathy risk. Check variant before high-dose therapy.'},
+    'Imatinib': {icon:'🔬', level:'MONITOR', cls:'mir-warn', desc:'BCR-ABL1 mutation status determines response. T315I gatekeeper mutation confers resistance. Regular monitoring recommended.'},
+    'Pembrolizumab': {icon:'✅', level:'SAFE', cls:'mir-ok', desc:'MSI-H/dMMR status indicates likely response. TMB and PD-L1 expression are key biomarkers for this therapy.'},
+    'Trastuzumab': {icon:'✅', level:'INDICATED', cls:'mir-ok', desc:'HER2 amplification detected — therapy is strongly indicated. Baseline cardiac function monitoring recommended.'},
+    'Letrozole': {icon:'✅', level:'SAFE', cls:'mir-ok', desc:'ER/PR receptor status determines eligibility. CYP2A6 variants may affect metabolism. Standard monitoring applies.'},
+    'Omeprazole': {icon:'🔬', level:'ADJUST', cls:'mir-warn', desc:'CYP2C19 ultra-rapid metabolizers may require higher doses for H. pylori eradication. Consider vonoprazan alternative.'},
+    'Aspirin': {icon:'✅', level:'SAFE', cls:'mir-ok', desc:'No significant PGx interactions. COX-1 inhibition is consistent across genotypes. Standard antiplatelet dosing applies.'},
+    'Ibuprofen': {icon:'✅', level:'SAFE', cls:'mir-ok', desc:'CYP2C9 poor metabolizers may experience higher plasma levels and increased GI risk. Monitor for adverse effects.'},
+    'Paracetamol': {icon:'✅', level:'SAFE', cls:'mir-ok', desc:'Generally safe across genotypes. NAT2 slow acetylator status — minimal impact at therapeutic doses.'},
+    'Amlodipine': {icon:'✅', level:'SAFE', cls:'mir-ok', desc:'CYP3A4/3A5 metabolizer status may affect drug levels. Drug-drug interaction with CYP3A4 inhibitors — monitor BP.'},
+  };
+  return pgxDb[medName] || {icon:'💊', level:'REVIEW', cls:'mir-warn', desc:'Limited PGx data available for this medication. Cross-referencing with PharmGKB and CPIC guidelines. Consult prescriber.'};
+}
+
+function resetAnalysis() {
+  document.getElementById('pName').value = '';
+  document.getElementById('pAge').value = '';
+  document.getElementById('pDisease').value = '';
+  document.getElementById('fileAttached').classList.remove('show');
+  medications = [];
+  renderMeds();
+  showToast('🔄 Form cleared');
+}
+
+// ==============================
+// PROFILE
+// ==============================
+const AVATARS = ['👤','🧬','👨‍🔬','👩‍🔬','🧑‍⚕️','👨‍⚕️','👩‍⚕️','🔬','🧪','💊','🏥','🌟'];
+let avatarIdx = 0;
+let profileData = {
+  name: '', email: '', role: '', age: '', blood: '—',
+  conditions: '', allergies: '', ethnicity: '', institution: '', bio: '',
+  avatar: '👤', analyses: 0
+};
+
+function loadProfileFromStorage() {
+  try {
+    const saved = localStorage.getItem('omicsOS_profile');
+    if (saved) profileData = {...profileData, ...JSON.parse(saved)};
+  } catch(e) {}
+  updateProfileView();
+}
+
+function saveProfile() {
+  profileData.name = document.getElementById('epName').value.trim() || 'Your Name';
+  profileData.email = document.getElementById('epEmail').value.trim();
+  profileData.role = document.getElementById('epRole').value.trim();
+  profileData.age = document.getElementById('epAge').value.trim() || '—';
+  profileData.blood = document.getElementById('epBlood').value;
+  profileData.conditions = document.getElementById('epConditions').value.trim();
+  profileData.allergies = document.getElementById('epAllergies').value.trim();
+  profileData.ethnicity = document.getElementById('epEthnicity').value;
+  profileData.institution = document.getElementById('epInstitution').value.trim();
+  profileData.bio = document.getElementById('epBio').value.trim();
+  profileData.avatar = document.getElementById('editAvatarEmoji').textContent;
+  try { localStorage.setItem('omicsOS_profile', JSON.stringify(profileData)); } catch(e) {}
+  updateProfileView();
+  toggleProfileEdit();
+  showToast('✅ Profile saved!');
+}
+
+function updateProfileView() {
+  document.getElementById('pvName').textContent = profileData.name || 'Your Name';
+  document.getElementById('pvRole').textContent = profileData.institution ? `${profileData.role || 'Researcher'} · ${profileData.institution}` : (profileData.role || 'Researcher / Patient');
+  document.getElementById('pvEmail').textContent = profileData.email || '—';
+  document.getElementById('pvAge').textContent = profileData.age || '—';
+  document.getElementById('pvBlood').textContent = profileData.blood || '—';
+  document.getElementById('pvAnalyses').textContent = profileData.analyses || 0;
+  document.getElementById('pvAvatar').textContent = profileData.avatar || '👤';
+  document.getElementById('pvConditions').textContent = profileData.conditions || 'Not set — tap ✏️ to edit';
+  document.getElementById('pvAllergies').textContent = profileData.allergies || 'Not set';
+  document.getElementById('pvEthnicity').textContent = profileData.ethnicity || 'Not set';
+}
+
+function toggleProfileEdit() {
+  const isEditing = document.getElementById('profileEditView').style.display !== 'none';
+  if (!isEditing) {
+    // Load current values into form
+    document.getElementById('epName').value = profileData.name === 'Your Name' ? '' : profileData.name;
+    document.getElementById('epEmail').value = profileData.email;
+    document.getElementById('epRole').value = profileData.role;
+    document.getElementById('epAge').value = profileData.age === '—' ? '' : profileData.age;
+    document.getElementById('epBlood').value = profileData.blood || '—';
+    document.getElementById('epConditions').value = profileData.conditions;
+    document.getElementById('epAllergies').value = profileData.allergies;
+    document.getElementById('epEthnicity').value = profileData.ethnicity;
+    document.getElementById('epInstitution').value = profileData.institution;
+    document.getElementById('epBio').value = profileData.bio;
+    document.getElementById('editAvatarEmoji').textContent = profileData.avatar || '👤';
+    avatarIdx = AVATARS.indexOf(profileData.avatar);
+    document.getElementById('profileView').style.display = 'none';
+    document.getElementById('profileEditView').style.display = 'block';
+    document.getElementById('profileEditToggle').textContent = '✕';
+  } else {
+    document.getElementById('profileEditView').style.display = 'none';
+    document.getElementById('profileView').style.display = 'block';
+    document.getElementById('profileEditToggle').textContent = '✏️';
+  }
+}
+
+function cycleAvatar() {
+  avatarIdx = (avatarIdx + 1) % AVATARS.length;
+  document.getElementById('editAvatarEmoji').textContent = AVATARS[avatarIdx];
+}
+
+// ==============================
+// SHARE
+// ==============================
+function shareApp() {
+  const shareData = {
+    title: 'OmicsOS — Precision Health AI',
+    text: 'Check out OmicsOS — a multi-omics AI app for precision health analysis. Analyze your genomics, proteomics, metabolomics data with AI!',
+    url: window.location.href
+  };
+  if (navigator.share) {
+    navigator.share(shareData).then(() => showToast('🔗 Shared successfully!')).catch(() => copyShareLink());
+  } else {
+    copyShareLink();
+  }
+}
+
+function copyShareLink() {
+  const url = window.location.href;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => showToast('🔗 Link copied to clipboard!')).catch(() => showToast('🔗 Share: ' + url));
+  } else {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); showToast('🔗 Link copied to clipboard!'); } catch(e) { showToast('🔗 Copy this link: ' + url); }
+    document.body.removeChild(ta);
+  }
+}
+function downloadReport() {
+  const r = window._lastResults;
+  if (!r) { showToast('⚠️ Run analysis first'); return; }
+  const txt = `================================================================
+OMICOS OS — PRECISION HEALTH ANALYSIS REPORT
+================================================================
+Patient: ${r.name}
+Disease Focus: ${r.disease}
+Report Date: ${new Date().toLocaleString()}
+Platform: OmicsOS v2.0
+
+KEY METRICS
+-----------
+Risk Score: ${r.riskScore}
+Pathogenic Variants: ${r.variants}
+Dysregulated Pathways: ${r.pathways}
+AI Confidence: ${r.confidence}
+
+DRUG RESPONSE PREDICTIONS
+--------------------------
+${r.drugs.map((d,i) => `${i+1}. ${d.name.padEnd(25)} ${d.pct}% response probability`).join('\n')}
+
+MEDICATION × GENOMICS INTERACTIONS
+------------------------------------
+${r.medications.length > 0 ? r.medications.map(m => {const p=getPGxData(m.name); return `• ${m.name}: ${p.level} — ${p.desc}`;}).join('\n') : 'No medications entered'}
+
+GENETIC VARIANTS
+----------------
+${r.variants.map(v => `• ${v.gene}: ${v.mut} [${v.impact}]`).join('\n')}
+
+DISCLAIMER
+----------
+This report is for informational purposes only.
+NOT a medical diagnosis. Consult a healthcare professional.
+================================================================
+OmicsOS · Jaipur, India · HIPAA | GDPR | DPDP Compliant
+================================================================`;
+
+  const blob = new Blob([txt], {type:'text/plain'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `OmicsOS_${r.name}_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  showToast('⬇️ Report downloaded!');
+}
+
+function downloadCSV() {
+  const r = window._lastResults;
+  if (!r) { showToast('⚠️ Run analysis first'); return; }
+  const csv = 'Drug,Response(%),Level\n' + r.drugs.map(d => `${d.name},${d.pct},${d.pct>70?'HIGH':d.pct>50?'MED':'LOW'}`).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'OmicsOS_DrugData.csv'; a.click();
+  showToast('📊 CSV exported!');
+}
+
+// ==============================
+// DATABASE DATA
+// ==============================
+const DBS = [
+  {id:'ncbi', cat:'genomics', name:'NCBI', full:'National Center for Biotechnology Information', color:'#1a6cff', access:'free', desc:'World\'s largest bioinformatics resource. GenBank, PubMed, dbSNP, ClinVar, and 40+ integrated databases.', tags:['DNA','Variants','Literature','Clinical'], url:'https://www.ncbi.nlm.nih.gov'},
+  {id:'ebi', cat:'genomics', name:'EBI', full:'European Bioinformatics Institute', color:'#1a6cff', access:'free', desc:'Europe\'s leading molecular biology data hub. Ensembl, UniProt, ArrayExpress, and European Genome-phenome Archive.', tags:['Multi-Omics','Genomes'], url:'https://www.ebi.ac.uk'},
+  {id:'ddbj', cat:'genomics', name:'DDBJ', full:'DNA Data Bank of Japan', color:'#1a6cff', access:'free', desc:'International DNA sequence database mirroring GenBank and EBI with focus on Asian genomic datasets.', tags:['DNA','NGS','Asia'], url:'https://www.ddbj.nig.ac.jp'},
+  {id:'ensembl', cat:'genomics', name:'Ensembl', full:'Ensembl Genome Browser', color:'#1a6cff', access:'free', desc:'Annotated genome browser for vertebrate genomes with gene models, comparative genomics, and variant annotations.', tags:['Genome','Annotation','Variants'], url:'https://www.ensembl.org'},
+  {id:'dbsnp', cat:'genomics', name:'dbSNP', full:'Database of Short Genetic Variations', color:'#1a6cff', access:'free', desc:'Primary NCBI archive for SNPs, indels, and microsatellites. 650M+ variants across the human genome.', tags:['SNPs','Variants','Population'], url:'https://www.ncbi.nlm.nih.gov/snp'},
+  {id:'1kg', cat:'genomics', name:'1000 Genomes', full:'1000 Genomes Project', color:'#1a6cff', access:'free', desc:'Comprehensive catalog of human genetic variation across 2,504 individuals from 26 global populations.', tags:['Population','WGS','Diversity'], url:'https://www.internationalgenome.org'},
+  {id:'geo', cat:'transcriptomics', name:'GEO', full:'Gene Expression Omnibus', color:'#00b8a9', access:'free', desc:'NCBI\'s public repository for high-throughput gene expression and functional genomics data. 4M+ samples.', tags:['RNA-seq','Microarray','Expression'], url:'https://www.ncbi.nlm.nih.gov/geo'},
+  {id:'arrayexpress', cat:'transcriptomics', name:'ArrayExpress', full:'ArrayExpress', color:'#00b8a9', access:'free', desc:'EBI\'s functional genomics data archive for high-throughput gene expression and epigenomics experiments.', tags:['Microarray','RNA-seq','Epigenomics'], url:'https://www.ebi.ac.uk/arrayexpress'},
+  {id:'expressionatlas', cat:'transcriptomics', name:'Expression Atlas', full:'Expression Atlas', color:'#00b8a9', access:'free', desc:'Curated gene and protein expression database with tissue-level and disease condition specificity across species.', tags:['Expression','Tissue','Disease'], url:'https://www.ebi.ac.uk/gxa'},
+  {id:'sra', cat:'transcriptomics', name:'SRA', full:'Sequence Read Archive', color:'#00b8a9', access:'free', desc:'World\'s largest repository of high-throughput sequencing raw data. 30M+ runs. FASTQ, BAM files.', tags:['Raw Reads','FASTQ','NGS'], url:'https://www.ncbi.nlm.nih.gov/sra'},
+  {id:'uniprot', cat:'proteomics', name:'UniProt', full:'Universal Protein Resource', color:'#6941c6', access:'free', desc:'Comprehensive protein sequence and functional information. 230M+ sequences with curated annotations.', tags:['Proteins','Function','Structure'], url:'https://www.uniprot.org'},
+  {id:'pdb', cat:'proteomics', name:'PDB', full:'Protein Data Bank', color:'#6941c6', access:'free', desc:'World repository of 3D structural data for biological macromolecules. Essential for drug target identification.', tags:['3D Structure','X-ray','Cryo-EM'], url:'https://www.rcsb.org'},
+  {id:'pride', cat:'proteomics', name:'PRIDE', full:'PRIDE Proteomics Archive', color:'#6941c6', access:'free', desc:'EBI\'s repository for mass spectrometry proteomics data. 30k+ experiments with peptide identifications.', tags:['Mass Spec','Peptides','Quantitative'], url:'https://www.ebi.ac.uk/pride'},
+  {id:'peptideatlas', cat:'proteomics', name:'PeptideAtlas', full:'PeptideAtlas', color:'#6941c6', access:'free', desc:'Compendium of peptides identified in mass spectrometry experiments across multiple species.', tags:['Peptides','SRM','MS'], url:'http://www.peptideatlas.org'},
+  {id:'hmdb', cat:'metabolomics', name:'HMDB', full:'Human Metabolome Database', color:'#f79009', access:'free', desc:'Comprehensive resource for human metabolite data. 220,000+ metabolites with biochemical and disease data.', tags:['Metabolites','Biochemistry','Disease'], url:'https://hmdb.ca'},
+  {id:'metalights', cat:'metabolomics', name:'MetaboLights', full:'MetaboLights', color:'#f79009', access:'free', desc:'EBI\'s database for metabolomics experiments. Raw spectra and metabolite profiles from peer-reviewed studies.', tags:['Metabolomics','NMR','MS'], url:'https://www.ebi.ac.uk/metabolights'},
+  {id:'kegg', cat:'metabolomics', name:'KEGG', full:'Kyoto Encyclopedia of Genes & Genomes', color:'#f79009', access:'free', desc:'Integrated bioinformatics resource linking genomics to biological functions through 550+ organism pathway maps.', tags:['Pathways','Networks','Metabolism'], url:'https://www.kegg.jp'},
+  {id:'metacyc', cat:'metabolomics', name:'MetaCyc', full:'MetaCyc Metabolic Pathways', color:'#f79009', access:'free', desc:'Curated database of 2,800+ metabolic pathways from 3,000+ organisms with enzyme and reaction data.', tags:['Pathways','Enzymes','Reactions'], url:'https://metacyc.org'},
+  {id:'tcga', cat:'cancer', name:'TCGA', full:'The Cancer Genome Atlas', color:'#ef4444', access:'free', desc:'Landmark program profiling 33 tumor types across 11,000+ patients with genomic, transcriptomic, proteomic & clinical data.', tags:['Cancer','WGS','Multi-Omics','33 Tumors'], url:'https://portal.gdc.cancer.gov'},
+  {id:'cptac', cat:'cancer', name:'CPTAC', full:'Clinical Proteomic Tumor Analysis Consortium', color:'#ef4444', access:'req', desc:'NCI program integrating proteomics with TCGA genomic data to characterize cancer biology across 10+ cancer types.', tags:['Proteogenomics','Clinical','NCI'], url:'https://proteomics.cancer.gov/programs/cptac'},
+  {id:'icgc', cat:'cancer', name:'ICGC', full:'International Cancer Genome Consortium', color:'#ef4444', access:'req', desc:'International collaboration cataloguing somatic mutations in 50 cancer types across 25,000 tumors worldwide.', tags:['Somatic Mutations','Global','50 Cancers'], url:'https://icgc.org'},
+  {id:'cbioportal', cat:'cancer', name:'cBioPortal', full:'cBioPortal for Cancer Genomics', color:'#ef4444', access:'free', desc:'Open-source platform for interactive exploration of multidimensional cancer genomics datasets. 300+ studies.', tags:['Interactive','Visualization','TCGA'], url:'https://www.cbioportal.org'},
+  {id:'hca', cat:'singlecell', name:'HCA', full:'Human Cell Atlas', color:'#12b76a', access:'free', desc:'Creating comprehensive reference maps of all ~37 trillion human cells across tissues, organs, and developmental stages.', tags:['scRNA-seq','Cell Types','Atlas'], url:'https://www.humancellatlas.org'},
+  {id:'scea', cat:'singlecell', name:'SCEA', full:'Single Cell Expression Atlas', color:'#12b76a', access:'free', desc:'EBI\'s curated single-cell RNA-seq dataset collection for gene expression at cellular resolution.', tags:['scRNA-seq','Expression','EBI'], url:'https://www.ebi.ac.uk/gxa/sc'},
+  {id:'cellxgene', cat:'singlecell', name:'CellxGene', full:'CellxGene — Chan Zuckerberg Initiative', color:'#12b76a', access:'free', desc:'Interactive browser and standardized data corpus for single-cell datasets. CZI Census for programmatic access.', tags:['Interactive','scRNA-seq','CZI'], url:'https://cellxgene.cziscience.com'},
+];
+
+function renderDbs(cat) {
+  const filtered = cat === 'all' ? DBS : DBS.filter(d => d.cat === cat);
+  document.getElementById('dbCards').innerHTML = filtered.map(db => `
+    <div class="db-card">
+      <div class="dc-top">
+        <div class="dc-color-bar" style="background:${db.color}"></div>
+        <div class="dc-info">
+          <div class="dc-name">${db.full}</div>
+          <div class="dc-short">${db.name}</div>
+        </div>
+        <div class="dc-right">
+          <div class="dc-access ${db.access === 'free' ? 'dc-free' : 'dc-req'}">${db.access === 'free' ? '✓ FREE' : '⚙ REG'}</div>
+        </div>
+      </div>
+      <div class="dc-body">
+        <div class="dc-desc">${db.desc}</div>
+        <div class="dc-tags">${db.tags.map(t => `<span class="dc-tag">${t}</span>`).join('')}</div>
+        <button class="dc-btn" onclick="openDb('${db.url}','${db.name}')">Open ${db.name} ↗</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openDb(url, name) {
+  showToast('🔗 Opening ' + name + '...');
+  setTimeout(() => window.open(url, '_blank'), 400);
+}
+
+function switchDbCat(cat, btn) {
+  document.querySelectorAll('.db-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDbs(cat);
+  document.getElementById('slide-3').scrollTop = 0;
+}
+
+// Disease search
+const DIS_DB_MAP = {
+  'breast cancer': {dbs:['TCGA','CPTAC','GEO','cBioPortal','ICGC','HMDB','UniProt','PDB','SRA','ExprAtlas','PRIDE','HCA'], colors:{TCGA:'#ef4444',CPTAC:'#ef4444',GEO:'#00b8a9',cBioPortal:'#ef4444',ICGC:'#ef4444',HMDB:'#f79009',UniProt:'#6941c6',PDB:'#6941c6',SRA:'#00b8a9',ExprAtlas:'#00b8a9',PRIDE:'#6941c6',HCA:'#12b76a'}},
+  'lung cancer': {dbs:['TCGA','CPTAC','GEO','cBioPortal','ICGC','SRA','UniProt','HMDB','PRIDE'], colors:{}},
+  'brca1': {dbs:['NCBI','dbSNP','Ensembl','UniProt','cBioPortal','TCGA','CPTAC','PDB'], colors:{}},
+  'type 2 diabetes': {dbs:['NCBI','GEO','HMDB','KEGG','UniProt','dbSNP','SRA','MetaboLights'], colors:{}},
+  'diabetes': {dbs:['NCBI','GEO','HMDB','KEGG','UniProt','dbSNP','SRA','MetaboLights'], colors:{}},
+  'alzheimer': {dbs:['GEO','NCBI','UniProt','HMDB','KEGG','SRA','Ensembl','HCA'], colors:{}},
+  'tp53': {dbs:['NCBI','dbSNP','Ensembl','UniProt','cBioPortal','TCGA','CPTAC','PDB'], colors:{}},
+  'colorectal': {dbs:['TCGA','CPTAC','GEO','cBioPortal','SRA','HMDB','UniProt'], colors:{}},
+};
+const DEFAULT_DB_COLORS = {TCGA:'#ef4444',CPTAC:'#ef4444',GEO:'#00b8a9',cBioPortal:'#ef4444',ICGC:'#ef4444',NCBI:'#1a6cff',Ensembl:'#1a6cff',dbSNP:'#1a6cff',UniProt:'#6941c6',PDB:'#6941c6',PRIDE:'#6941c6',HMDB:'#f79009',KEGG:'#f79009',MetaboLights:'#f79009',SRA:'#00b8a9',ExprAtlas:'#00b8a9',HCA:'#12b76a',CPTAC:'#ef4444'};
+const DB_URLS = {TCGA:'https://portal.gdc.cancer.gov',CPTAC:'https://proteomics.cancer.gov',GEO:'https://www.ncbi.nlm.nih.gov/geo',cBioPortal:'https://www.cbioportal.org',ICGC:'https://icgc.org',NCBI:'https://www.ncbi.nlm.nih.gov',Ensembl:'https://www.ensembl.org',dbSNP:'https://www.ncbi.nlm.nih.gov/snp',UniProt:'https://www.uniprot.org',PDB:'https://www.rcsb.org',PRIDE:'https://www.ebi.ac.uk/pride',HMDB:'https://hmdb.ca',KEGG:'https://www.kegg.jp',MetaboLights:'https://www.ebi.ac.uk/metabolights',SRA:'https://www.ncbi.nlm.nih.gov/sra',ExprAtlas:'https://www.ebi.ac.uk/gxa',HCA:'https://www.humancellatlas.org'};
+const DB_CATS = {TCGA:'Cancer Multi-Omics',CPTAC:'Cancer Multi-Omics',GEO:'Transcriptomics',cBioPortal:'Cancer Multi-Omics',ICGC:'Cancer Multi-Omics',NCBI:'Genomics',Ensembl:'Genomics',dbSNP:'Genomics',UniProt:'Proteomics',PDB:'Proteomics',PRIDE:'Proteomics',HMDB:'Metabolomics',KEGG:'Metabolomics',MetaboLights:'Metabolomics',SRA:'Transcriptomics',ExprAtlas:'Transcriptomics',HCA:'Single-Cell'};
+
+function qSearch(term) {
+  document.getElementById('dsInput').value = term;
+  searchDisease();
+}
+
+function searchDisease() {
+  const q = document.getElementById('dsInput').value.trim();
+  if (!q) { showToast('⚠️ Enter a disease or gene name'); return; }
+  const key = q.toLowerCase();
+  const matched = Object.keys(DIS_DB_MAP).find(k => key.includes(k) || k.includes(key));
+  const entry = matched ? DIS_DB_MAP[matched] : DIS_DB_MAP['breast cancer'];
+  const sources = entry.dbs;
+
+  document.getElementById('disTitle').textContent = `"${q}" found in ${sources.length} databases`;
+  document.getElementById('disCount').textContent = sources.length + ' DBs';
+  document.getElementById('disRows').innerHTML = sources.map(src => `
+    <div class="dis-row">
+      <div class="dis-dot" style="background:${DEFAULT_DB_COLORS[src]||'#999'}"></div>
+      <div class="dis-db">${src}</div>
+      <div class="dis-cat">${DB_CATS[src]||'Genomics'}</div>
+      <a href="${DB_URLS[src]||'#'}" target="_blank" class="dis-link">Open ↗</a>
+    </div>
+  `).join('');
+
+  document.getElementById('disResults').classList.add('show');
+  showToast(`🔍 Found in ${sources.length} databases`);
+}
+
+// ==============================
+// HOW-TO SOURCES
+// ==============================
+const HOWTO = [
+  {icon:'🧬', name:'23andMe', desc:'Download raw DNA (txt/zip) from Account Settings → Browse Raw Data → Download Raw Data.', url:'https://www.23andme.com', country:'🌍 Global'},
+  {icon:'🌳', name:'AncestryDNA', desc:'Export raw DNA from Settings → Privacy → DNA Data → Download DNA Raw Data.', url:'https://www.ancestry.com', country:'🌍 Global'},
+  {icon:'🔬', name:'Nebula Genomics', desc:'Whole genome sequencing with downloadable FASTQ / VCF files from your secure portal.', url:'https://nebula.org', country:'🌍 Global'},
+  {icon:'🏥', name:'MyChart / Epic', desc:'Download lab reports as PDF from your hospital patient portal. Export using FHIR API if available.', url:'https://mychart.com', country:'🌍 Global'},
+  {icon:'🧫', name:'Color Genomics', desc:'Clinical hereditary cancer and cardiac genetic testing. Download PDF/VCF from your account portal.', url:'https://www.color.com', country:'🇺🇸 USA'},
+  {icon:'💊', name:'GeneSight (Myriad)', desc:'Pharmacogenomics testing showing how your genes affect medication response. Download PDF report.', url:'https://genesight.com', country:'🇺🇸 USA'},
+  {icon:'🌱', name:'Viome', desc:'Gut microbiome and transcriptomics insights. Export data from Account → Data Export.', url:'https://www.viome.com', country:'🌍 Global'},
+  {icon:'🏃', name:'InsideTracker', desc:'Blood biomarker and DNA analysis. Download CSV from Account → Download My Data.', url:'https://www.insidetracker.com', country:'🌍 Global'},
+  {icon:'🔎', name:'Foundation Medicine', desc:'Clinical tumor genomic profiling for cancer. Request PDF from your oncologist or directly from Foundation.', url:'https://www.foundationmedicine.com', country:'🌍 Global'},
+  {icon:'💉', name:'Guardant Health', desc:'Liquid biopsy cancer genomics. Reports via your oncologist after Guardant360 testing.', url:'https://www.guardanthealth.com', country:'🌍 Global'},
+  {icon:'🇮🇳', name:'MedGenome India', desc:'India\'s largest genomic diagnostics lab. Download reports from patient portal or request from doctor.', url:'https://www.medgenome.com', country:'🇮🇳 India'},
+  {icon:'📋', name:'Any Lab / Hospital', desc:'Any blood test or biopsy report PDF works. Export from doctor\'s portal or ask for digital copy.', url:'#', country:'🌍 Universal'},
+];
+
+function renderHowto() {
+  document.getElementById('howtoCards').innerHTML = HOWTO.map(h => `
+    <div class="howto-card">
+      <div class="hc-icon">${h.icon}</div>
+      <div class="hc-info">
+        <div class="hc-name">${h.name}</div>
+        <div class="hc-desc">${h.desc}</div>
+        <div><span class="hc-country">${h.country}</span></div>
+        <a href="${h.url}" target="_blank" class="hc-link">Visit ${h.name} ↗</a>
+      </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==============================
+// INIT
+// ==============================
+renderDbs('all');
+renderHowto();
+loadProfileFromStorage();
+
+</script>
+</body>
+</html>
